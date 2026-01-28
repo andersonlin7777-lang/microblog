@@ -1,0 +1,16 @@
+from typing import Optional
+import sqlalchemy as sa
+import sqlalchemy.orm as so
+from app import db
+
+class User(db.Model):
+    #確保資料庫中絕對不會有兩筆完全一樣的 ID
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    #index=True建立了索引，資料庫就能瞬間找到該使用者，unique=True：拒絕重複
+    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
+    email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
+    password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
+    #Python 方法。終端機印出一個 User 物件時，不會顯示難懂的 <User object at 0x...>
+    #而是顯示清晰的 <User sally>。這對Debugging有幫助
+    def __repr__(self):
+        return '<User {}>'.format(self.username)
