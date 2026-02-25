@@ -2,11 +2,14 @@ from datetime import datetime, timezone
 from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from app import db
+from app import db, login
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 
 
-class User(db.Model):
+
+
+class User(UserMixin, db.Model):
     #確保資料庫中絕對不會有兩筆完全一樣的 ID
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     #index=True建立了索引，資料庫就能瞬間找到該使用者，unique=True：拒絕重複
@@ -42,3 +45,7 @@ class Posts(db.Model):
 
     def __repr__(self):
         return '<Posts {}>'.format(self.body)
+    
+@login.user_loader
+def load_user(id):
+    return db.session.get(User, int(id))
