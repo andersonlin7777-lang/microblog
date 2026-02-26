@@ -1,6 +1,10 @@
 from flask import render_template, flash, redirect, url_for
 from app import app
 from app.forms import LoginForm
+from flask_login import current_user, login_user
+import sqlalchemy as sa
+from app import db
+from app.models import User
 
 @app.route("/")# 這裡告訴 Flask：當使用者造訪首頁時（/），第一層標籤
 @app.route("/index")#造訪 /index 時，第二層標籤
@@ -21,12 +25,17 @@ def index():# # 只要上面任一標籤被觸發，就執行這個「視圖函�
 #定義：這裡接收 GET 和 POST
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
     form = LoginForm()
     if form.validate_on_submit():
         #在還沒連動資料庫之前，我們先用 flash() 確保資料確實從前端（HTML 表單）
         #成功傳到了後端（Python 函式）
-        flash("Login requested for user {}, remember_me={}".format(
-            form.username.data, form.remember_me.data))
+        user = db.session.scalar(sa.select(User).where(User.username == form.username.data))
+        if user is None or not user.check_password(form.password.data):
+            flash("invalid username or password")
+            return redirect(url_for("login"))
+        login_user(user, remember=form.remember_me.data)
         #查詢：我想去首頁，請幫我查 'index' 函式的網址是什麼，url_for('index') 會幫你算出 "/index"
         return redirect(url_for('index'))
     return render_template("login.html", title="Sign In", form=form)
