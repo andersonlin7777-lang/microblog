@@ -1,13 +1,15 @@
-from flask import render_template, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for, request
 from app import app
 from app.forms import LoginForm
-from flask_login import current_user, login_user
+from flask_login import current_user, login_user, logout_user, login_required
 import sqlalchemy as sa
 from app import db
 from app.models import User
+from urllib.parse import urlsplit
 
 @app.route("/")# 這裡告訴 Flask：當使用者造訪首頁時（/），第一層標籤
 @app.route("/index")#造訪 /index 時，第二層標籤
+@login_required #驗證是否有登入
 def index():# # 只要上面任一標籤被觸發，就執行這個「視圖函式」
     user = {"username": "Miguel"}
     posts = [
@@ -36,6 +38,17 @@ def login():
             flash("invalid username or password")
             return redirect(url_for("login"))
         login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get("next")
+        if not next_page or urlsplit(next_page).netloc != "":
+            next_page = url_for("index")
+        return redirect(next_page)
+
         #查詢：我想去首頁，請幫我查 'index' 函式的網址是什麼，url_for('index') 會幫你算出 "/index"
         return redirect(url_for('index'))
     return render_template("login.html", title="Sign In", form=form)
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    return redirect(url_for("index"))
+    

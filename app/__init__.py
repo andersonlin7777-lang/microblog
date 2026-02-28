@@ -15,6 +15,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db) 
 
 login = LoginManager(app)
+login.login_view = "login"
 
 # 最佳實踐：在最後才導入 routes，以避免「你等我、我等妳」的循環導入問題
 # routes 模組此時已經可以使用上面定義好的 app 變數了
