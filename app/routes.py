@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, request
 from app import app
-from app.forms import LoginForm
+from app.forms import LoginForm, RegistrationForm
 from flask_login import current_user, login_user, logout_user, login_required
 import sqlalchemy as sa
 from app import db
@@ -11,7 +11,6 @@ from urllib.parse import urlsplit
 @app.route("/index")#造訪 /index 時，第二層標籤
 @login_required #驗證是否有登入
 def index():# # 只要上面任一標籤被觸發，就執行這個「視圖函式」
-    user = {"username": "Miguel"}
     posts = [
         {
             'author': {'username': 'John'},
@@ -22,7 +21,7 @@ def index():# # 只要上面任一標籤被觸發，就執行這個「視圖函�
             'body': 'The Avengers movie was so cool!'
         }
     ]
-    return render_template("index.html", title="Home", user=user, posts=posts)
+    return render_template("index.html", title="Home Page", posts=posts)
 
 #定義：這裡接收 GET 和 POST
 @app.route('/login', methods=['GET', 'POST'])
@@ -51,4 +50,17 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("index"))
-    
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash("congratulations, you are now a registered user.")
+        return redirect(url_for("login"))
+    return render_template("register.html", title="Register", form=form)
