@@ -5,9 +5,7 @@ import sqlalchemy.orm as so
 from app import db, login
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-
-
-
+from hashlib import md5
 
 class User(UserMixin, db.Model):
     #確保資料庫中絕對不會有兩筆完全一樣的 ID
@@ -29,6 +27,10 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode("utf-8")).hexdigest()
+        return f"https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}"
     
     #Python 方法。終端機印出一個 User 物件時，不會顯示難懂的 <User object at 0x...>
     #而是顯示清晰的 <User sally>。這對Debugging有幫助
