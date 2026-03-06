@@ -1,0 +1,18 @@
+2026-03-06 11:39:00,692 ERROR: Exception on /edit_profile [GET] [in C:\Users\User\Desktop\learn\microblog\venv\Lib\site-packages\flask\app.py:875]
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\learn\microblog\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\User\Desktop\learn\microblog\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\User\Desktop\learn\microblog\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\User\Desktop\learn\microblog\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\learn\microblog\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\learn\microblog\app\routes.py", line 89, in edit_profile
+    if form.validate_on_submit():
+       ~~~~~~~~~~~~~~~~~~~~~~~^^
+TypeError: EditProfileForm.validate_on_submit() missing 1 required positional argument: 'username'

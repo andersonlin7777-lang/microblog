@@ -33,6 +33,20 @@ class EditProfileForm(FlaskForm):
     about_me = TextAreaField("About me", validators=[Length(min=0, max=140)])
     submit = SubmitField("Submit")
 
+    def __init__(self, original_username, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.original_username = original_username
+
+    def validate_username(self, username):
+        # 只有在「名字改了」的情況下才檢查
+        if username.data != self.original_username:
+            #去資料庫搜尋：有沒有「別人」已經用了這個新名字
+            user = db.session.scalar(sa.select(User).where(User.username == username.data))
+            if user is not None:
+                raise ValidationError("Please use a different username.")
+            
+
+
 
     
 
