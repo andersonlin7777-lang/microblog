@@ -7,6 +7,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
 
+followers = sa.Table(
+    "followers",
+    db.metadata,
+    sa.Column("follower_id", sa.Integer, sa.ForeignKey("user_id"), primary_key=True),
+    sa.Column("follower_id", sa.Integer, sa.ForeignKey("user_id"), primary_key=True)
+)
+
 class User(UserMixin, db.Model):
     #確保資料庫中絕對不會有兩筆完全一樣的 ID
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
