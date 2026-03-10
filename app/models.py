@@ -7,11 +7,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
 
+#它的唯一作用是定義「關係」。如果你不需要在這張表上儲存額外的資訊（例如：追蹤的時間、追蹤的備註）
+#那麼直接使用 sa.Table 會讓程式碼更簡潔，且能減少記憶體開銷
+#Compound Primary Key：這在資料完整性上非常重要。它確保了 (A 追蹤 B) 這組關係在資料庫中只會出現一次
+#有效防止了重複點擊「追蹤」按鈕導致資料錯亂的問題
 followers = sa.Table(
     "followers",
     db.metadata,
     sa.Column("follower_id", sa.Integer, sa.ForeignKey("user_id"), primary_key=True),
-    sa.Column("follower_id", sa.Integer, sa.ForeignKey("user_id"), primary_key=True)
+    sa.Column("followed_id", sa.Integer, sa.ForeignKey("user_id"), primary_key=True)
 )
 
 class User(UserMixin, db.Model):
