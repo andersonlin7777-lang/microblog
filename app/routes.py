@@ -1,28 +1,28 @@
 from flask import render_template, flash, redirect, url_for, request
 from app import app
-from app.forms import LoginForm, RegistrationForm, EditProfileForm, EmptyForm
+from app.forms import LoginForm, RegistrationForm, EditProfileForm, EmptyForm, PostForm
 from flask_login import current_user, login_user, logout_user, login_required
 import sqlalchemy as sa
 from app import db
-from app.models import User
+from app.models import User, Post
 from urllib.parse import urlsplit
 from datetime import datetime, timezone
 
-@app.route("/")# 這裡告訴 Flask：當使用者造訪首頁時（/），第一層標籤
-@app.route("/index")#造訪 /index 時，第二層標籤
+#當你「輸入網址」進入頁面時，是 GET; 當你「按下 Submit」發送貼文時，是 POST
+@app.route("/", methods=['GET', 'POST'])# 這裡告訴 Flask：當使用者造訪首頁時（/），第一層標籤
+@app.route("/index", methods=['GET', 'POST'])#造訪 /index 時，第二層標籤
 @login_required #驗證是否有登入
 def index():# # 只要上面任一標籤被觸發，就執行這個「視圖函式」
-    posts = [
-        {
-            'author': {'username': 'John'},
-            'body': 'Beautiful day in Portland!'
-        },
-        {
-            'author': {'username': 'Susan'},
-            'body': 'The Avengers movie was so cool!'
-        }
-    ]
-    return render_template("index.html", title="Home Page", posts=posts)
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(body=form.post.data, author=current_user)
+        db.session.add(post)
+        db.session.commit()
+        flash('your post is now live.')
+        return redirect(url_for('index'))
+    page = request.args.get('page', 1 , type=int)
+    posts = db.paginate(current_user.following_posts(), page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False)
+    return render_template("index.html", title="Home", form=form, posts=posts.items)
 
 #定義：這裡接收 GET 和 POST
 @app.route('/login', methods=['GET', 'POST'])
@@ -101,7 +101,7 @@ def edit_profile():
 @app.route('/follow/<username>', methods=['POST'])
 @login_required
 def follow(username):
-    form = EmptyForm
+    form = EmptyForm()
     if form.validate_on_submit():
         user = db.session.scalar(
             sa.select(User).where(User.username == username))
@@ -137,3 +137,11 @@ def unfollow(username):
         return redirect(url_for('user', username=username))
     else:
         return redirect(url_for('index'))
+    
+@app.route('/explore')
+@login_required
+def explore():
+    page = request.args.get('page', 1, type=int)
+    query= sa.select(Post).order_by(Post.timestamp.desc())
+    posts = db.paginate(query, page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False)
+    return render_template('index.html', title='Explore', posts=posts.items)
