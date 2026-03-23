@@ -1,12 +1,13 @@
 from flask import render_template, flash, redirect, url_for, request
 from app import app
-from app.forms import LoginForm, RegistrationForm, EditProfileForm, EmptyForm, PostForm
+from app.forms import LoginForm, RegistrationForm, EditProfileForm, EmptyForm, PostForm, ResetPasswordRequestForm
 from flask_login import current_user, login_user, logout_user, login_required
 import sqlalchemy as sa
 from app import db
 from app.models import User, Post
 from urllib.parse import urlsplit
 from datetime import datetime, timezone
+from app.email import send_password_reset_email
 
 #當你「輸入網址」進入頁面時，是 GET; 當你「按下 Submit」發送貼文時，是 POST
 @app.route("/", methods=['GET', 'POST'])# 這裡告訴 Flask：當使用者造訪首頁時（/），第一層標籤
@@ -156,3 +157,17 @@ def explore():
     query= sa.select(Post).order_by(Post.timestamp.desc())
     posts = db.paginate(query, page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False)
     return render_template('index.html', title='Explore', posts=posts.items)
+
+@app.route('/reset_password_request', method=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).where(User.email == form.email.data))
+        if user:
+            send_password_reset_email(user)
+        flash('check your email for the instruction to reset your password')
+        return redirect(url_for('login'))
+    return render_template('reset_password_request.html', title='Reset Password', form=form)

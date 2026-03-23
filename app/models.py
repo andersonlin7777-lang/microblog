@@ -2,10 +2,12 @@ from datetime import datetime, timezone
 from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from app import db, login
+from app import db, login, app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
+from time import time
+import jwt
 
 #它的唯一作用是定義「關係」。如果你不需要在這張表上儲存額外的資訊（例如：追蹤的時間、追蹤的備註）
 #那麼直接使用 sa.Table 會讓程式碼更簡潔，且能減少記憶體開銷
@@ -94,7 +96,19 @@ class User(UserMixin, db.Model):
             .order_by(Post.timestamp.desc())
         )
     
+    def get_reset_password_token(self, expires_in=600):
+        return jwt.encode(
+            {'reset_password': self.id, 'exp': time() + expires_in},
+            app.config['SECRET_KEY'], algorithm='HS256')
     
+    @staticmethod
+    def verify_reset_password_token(token):
+        try:
+            id = jwt.decode(token, app.config['SECRET_KEY'],
+                            algorithms=['HS256'])['reset_password']
+        except:
+            return
+        return db.session.get(User, id)
     
     
     #Python 方法。終端機印出一個 User 物件時，不會顯示難懂的 <User object at 0x...>
