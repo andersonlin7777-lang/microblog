@@ -7,6 +7,7 @@ import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
 from flask_mail import Mail
+from flask_moment import Moment
 
 # 建立 Flask 應用程式物件，__name__ 幫助 Flask 找到資源路徑
 app = Flask(__name__)
@@ -17,6 +18,8 @@ db = SQLAlchemy(app)
 #初始化 Flask-Migrate
 #處理資料庫結構的變更（例如：增加或刪除欄位）
 migrate = Migrate(app, db) 
+
+moment = Moment(app)
 
 login = LoginManager(app)
 login.login_view = "login"
