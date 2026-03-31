@@ -8,6 +8,8 @@ from app.models import User, Post
 from urllib.parse import urlsplit
 from datetime import datetime, timezone
 from app.email import send_password_reset_email
+from flask import g
+from flask_babel import get_locale
 
 #當你「輸入網址」進入頁面時，是 GET; 當你「按下 Submit」發送貼文時，是 POST
 @app.route("/", methods=['GET', 'POST'])# 這裡告訴 Flask：當使用者造訪首頁時（/），第一層標籤
@@ -94,6 +96,7 @@ def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.now(timezone.utc)
         db.session.commit()
+        g.locale = str(get_locale())
 
 @app.route("/edit_profile", methods=["GET", "POST"])
 @login_required
